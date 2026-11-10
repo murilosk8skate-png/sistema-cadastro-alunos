@@ -6,9 +6,9 @@ Este projeto foi desenvolvido como atividade prática da disciplina de **Design 
 O programa consiste em um sistema de terminal para cadastro, busca e gerenciamento de notas de alunos, calculando médias e gerando estatísticas gerais de desempenho.
 
 ## Integrantes da Equipe
-* **Murilo Mussi** - *Desenvolvedor / Gerenciamento de Repositório*
-* **Guilherme Rodrigues** - *Desenvolvedor / Módulo de Validação e Consulta*
-* **Matheus Assalin** - *Desenvolvedor / Módulo de Relatórios e Documentação*
+* **Murilo Mussi** - *Desenvolvedor / Cadastro de alunos*
+* **Guilherme Rodrigues** - *Desenvolvedor / Interface Gráfica*
+* **Matheus Assalin** - *Desenvolvedor / Funcionalidade de editar e remover aluno*
 
 ## Funcionalidades
 - **Cadastro de Alunos**: Registro de R.A., Nome, Nota 1 e Nota 2.
