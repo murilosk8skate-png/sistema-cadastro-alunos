@@ -26,4 +26,17 @@ O programa consiste em um sistema de terminal para cadastro, busca e gerenciamen
 ### Como Executar
 1. Clone o repositório:
    ```bash
-   git clone [https://github.com/SEU_USUARIO/sistema-cadastro-alunos.git](https://github.com/SEU_USUARIO/sistema-cadastro-alunos.git)
+   git clone https://github.com/murilosk8skate-png/sistema-cadastro-alunos.git
+   ```
+
+## Interface gráfica (Tkinter)
+
+Além do sistema de terminal, o projeto inclui uma interface gráfica independente para cadastrar, consultar e acompanhar o desempenho dos alunos. A interface utiliza a mesma estrutura de dados e as mesmas regras de validação do programa de terminal.
+
+Execute a partir da pasta do projeto:
+
+```bash
+python sistema_alunos_gui.py
+```
+
+O Tkinter faz parte da biblioteca padrão do Python. Os dados permanecem em memória durante a execução, como no programa de terminal; ao fechar o aplicativo, os cadastros não são gravados em arquivo.
