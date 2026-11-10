@@ -229,6 +229,11 @@ class SistemaAlunosApp(tk.Tk):
             font=("Segoe UI", 9),
         ).pack(side="right")
 
+        actions = tk.Frame(table_heading, bg=SURFACE)
+        actions.pack(side="left", padx=(0, 10))
+        ttk.Button(actions, text="Editar", command=self.edit_selected_student).pack(side="left", padx=(0, 8))
+        ttk.Button(actions, text="Excluir", command=self.delete_selected_student).pack(side="left")
+
         table_frame = tk.Frame(table_card, bg=SURFACE)
         table_frame.pack(fill="both", expand=True, padx=20, pady=(0, 18))
         columns = ("ra", "nome", "nota1", "nota2", "media", "status")
@@ -476,14 +481,14 @@ class SistemaAlunosApp(tk.Tk):
         ).pack(side="left")
         entries["ra"].focus_set()
 
-    def _save_student(self, dialog, entries):
+    def _save_student(self, dialog, entries, editing_ra=None):
         ra = entries["ra"].get().strip()
         nome = entries["nome"].get().strip()
         if not ra:
             messagebox.showerror("Dados inválidos", "O R.A. não pode ser vazio.", parent=dialog)
             entries["ra"].focus_set()
             return
-        if any(aluno["ra"] == ra for aluno in sistema_alunos.alunos):
+        if any(aluno["ra"] == ra and aluno["ra"] != editing_ra for aluno in sistema_alunos.alunos):
             messagebox.showerror("R.A. duplicado", f"Já existe um aluno com o R.A. {ra}.", parent=dialog)
             entries["ra"].focus_set()
             return
@@ -502,20 +507,124 @@ class SistemaAlunosApp(tk.Tk):
             return
 
         media = (nota1 + nota2) / 2
-        sistema_alunos.alunos.append(
-            {
+        status = "Aprovado" if media >= 7.0 else "Reprovado"
+
+        if editing_ra is None:
+            sistema_alunos.alunos.append({
                 "ra": ra,
                 "nome": nome,
                 "nota1": nota1,
                 "nota2": nota2,
                 "media": media,
-                "status": "Aprovado" if media >= 7.0 else "Reprovado",
-            }
-        )
+                "status": status,
+            })
+            message_text = f"Aluno '{nome}' cadastrado com sucesso."
+        else:
+            for aluno in sistema_alunos.alunos:
+                if aluno["ra"] == editing_ra:
+                    aluno["ra"] = ra
+                    aluno["nome"] = nome
+                    aluno["nota1"] = nota1
+                    aluno["nota2"] = nota2
+                    aluno["media"] = media
+                    aluno["status"] = status
+                    break
+            message_text = f"Aluno '{nome}' atualizado com sucesso."
+
         dialog.destroy()
         self.refresh_students()
         self.refresh_reports()
-        messagebox.showinfo("Cadastro concluído", f"Aluno '{nome}' cadastrado com sucesso.", parent=self)
+        messagebox.showinfo("Operação concluída", message_text, parent=self)
+
+    def edit_selected_student(self):
+        selection = self.student_table.selection()
+        if not selection:
+            messagebox.showwarning("Seleção necessária", "Selecione um aluno na tabela para editar.", parent=self)
+            return
+        values = self.student_table.item(selection[0], "values")
+        aluno = next((item for item in sistema_alunos.alunos if item["ra"] == values[0]), None)
+        if aluno is None:
+            messagebox.showerror("Aluno não encontrado", "Não foi possível localizar o aluno selecionado.", parent=self)
+            return
+
+        dialog = tk.Toplevel(self)
+        dialog.title("Editar aluno")
+        dialog.configure(bg=SURFACE)
+        dialog.resizable(False, False)
+        dialog.transient(self)
+        dialog.grab_set()
+
+        tk.Label(
+            dialog,
+            text="Editar aluno",
+            bg=SURFACE,
+            fg=TEXT,
+            font=("Segoe UI Semibold", 17),
+        ).grid(row=0, column=0, columnspan=2, sticky="w", padx=24, pady=(22, 3))
+        tk.Label(
+            dialog,
+            text="Atualize os dados e as notas do aluno.",
+            bg=SURFACE,
+            fg=MUTED,
+            font=("Segoe UI", 9),
+        ).grid(row=1, column=0, columnspan=2, sticky="w", padx=24, pady=(0, 15))
+
+        fields = (
+            ("R.A.", "ra", aluno["ra"]),
+            ("Nome completo", "nome", aluno["nome"]),
+            ("Nota 1 (0 a 10)", "nota1", str(aluno["nota1"])),
+            ("Nota 2 (0 a 10)", "nota2", str(aluno["nota2"])),
+        )
+        entries = {}
+        for row, (label, key, default) in enumerate(fields, start=2):
+            tk.Label(dialog, text=label, bg=SURFACE, fg=TEXT, font=("Segoe UI Semibold", 9)).grid(
+                row=row, column=0, sticky="w", padx=24, pady=6
+            )
+            entry = tk.Entry(
+                dialog,
+                width=34,
+                bg="#f7f8fc",
+                fg=TEXT,
+                insertbackground=TEXT,
+                relief="flat",
+                font=("Segoe UI", 10),
+            )
+            entry.insert(0, default)
+            entry.grid(row=row, column=1, padx=(5, 24), pady=6, ipady=8, sticky="ew")
+            entries[key] = entry
+
+        buttons = tk.Frame(dialog, bg=SURFACE)
+        buttons.grid(row=6, column=0, columnspan=2, sticky="e", padx=24, pady=(18, 22))
+        ttk.Button(buttons, text="Cancelar", command=dialog.destroy).pack(side="left", padx=(0, 8))
+        ttk.Button(
+            buttons,
+            text="Salvar alterações",
+            style="Primary.TButton",
+            command=lambda: self._save_student(dialog, entries, editing_ra=aluno["ra"]),
+        ).pack(side="left")
+        entries["ra"].focus_set()
+
+    def delete_selected_student(self):
+        selection = self.student_table.selection()
+        if not selection:
+            messagebox.showwarning("Seleção necessária", "Selecione um aluno na tabela para excluir.", parent=self)
+            return
+        values = self.student_table.item(selection[0], "values")
+        aluno = next((item for item in sistema_alunos.alunos if item["ra"] == values[0]), None)
+        if aluno is None:
+            messagebox.showerror("Aluno não encontrado", "Não foi possível localizar o aluno selecionado.", parent=self)
+            return
+        confirmar = messagebox.askyesno(
+            "Confirmar exclusão",
+            f"Deseja realmente excluir o aluno '{aluno['nome']}' (R.A. {aluno['ra']})?",
+            parent=self,
+        )
+        if not confirmar:
+            return
+        sistema_alunos.alunos[:] = [item for item in sistema_alunos.alunos if item["ra"] != aluno["ra"]]
+        self.refresh_students()
+        self.refresh_reports()
+        messagebox.showinfo("Aluno excluído", f"Aluno '{aluno['nome']}' removido com sucesso.", parent=self)
 
     def show_student_details(self, _event):
         selection = self.student_table.selection()
