@@ -10,6 +10,21 @@ import sys
 alunos = []
 
 
+def calcular_media(nota1, nota2):
+    return (nota1 + nota2) / 2
+
+
+def definir_status(media):
+    return "Aprovado" if media >= 7.0 else "Reprovado"
+
+
+def buscar_aluno_por_ra(ra):
+    for aluno in alunos:
+        if aluno['ra'] == ra:
+            return aluno
+    return None
+
+
 def exibir_menu():
     print("\n" + "=" * 40)
     print("      SISTEMA DE CADASTRO DE ALUNOS      ")
@@ -17,8 +32,10 @@ def exibir_menu():
     print("1. Cadastrar Aluno")
     print("2. Listar Alunos")
     print("3. Buscar Aluno por R.A.")
-    print("4. Relatório de Desempenho (Médias)")
-    print("5. Sair")
+    print("4. Editar Aluno")
+    print("5. Apagar Aluno")
+    print("6. Relatório de Desempenho (Médias)")
+    print("7. Sair")
     print("=" * 40)
 
 
@@ -51,8 +68,8 @@ def cadastrar_aluno():
         print("Erro: Entrada inválida para as notas. Digite valores numéricos.")
         return
 
-    media = (nota1 + nota2) / 2
-    status = "Aprovado" if media >= 7.0 else "Reprovado"
+    media = calcular_media(nota1, nota2)
+    status = definir_status(media)
 
     aluno = {
         'ra': ra,
@@ -102,6 +119,65 @@ def buscar_aluno():
         print(f"Nenhum aluno encontrado com o R.A. '{ra_busca}'.")
 
 
+def editar_aluno():
+    print("\n--- EDIÇÃO DE ALUNO ---")
+    if not alunos:
+        print("Nenhum aluno cadastrado no sistema.")
+        return
+
+    ra = input("Digite o R.A. do aluno que deseja editar: ").strip()
+    aluno = buscar_aluno_por_ra(ra)
+
+    if aluno is None:
+        print(f"Nenhum aluno encontrado com o R.A. '{ra}'.")
+        return
+
+    print(f"Aluno atual: {aluno['nome']} | Nota 1: {aluno['nota1']:.2f} | Nota 2: {aluno['nota2']:.2f}")
+
+    novo_nome = input(f"Digite o novo nome [{aluno['nome']}]: ").strip()
+    if not novo_nome:
+        novo_nome = aluno['nome']
+
+    try:
+        nota1 = input(f"Digite a nova Nota 1 [{aluno['nota1']:.2f}]: ").strip()
+        nota1 = float(nota1) if nota1 else aluno['nota1']
+
+        nota2 = input(f"Digite a nova Nota 2 [{aluno['nota2']:.2f}]: ").strip()
+        nota2 = float(nota2) if nota2 else aluno['nota2']
+
+        if not (0 <= nota1 <= 10 and 0 <= nota2 <= 10):
+            print("Erro: As notas devem ser valores entre 0 e 10.")
+            return
+    except ValueError:
+        print("Erro: Entrada inválida para as notas. Digite valores numéricos.")
+        return
+
+    aluno['nome'] = novo_nome
+    aluno['nota1'] = nota1
+    aluno['nota2'] = nota2
+    aluno['media'] = calcular_media(nota1, nota2)
+    aluno['status'] = definir_status(aluno['media'])
+
+    print(f"Aluno '{aluno['nome']}' atualizado com sucesso!")
+
+
+def apagar_aluno():
+    print("\n--- EXCLUSÃO DE ALUNO ---")
+    if not alunos:
+        print("Nenhum aluno cadastrado no sistema.")
+        return
+
+    ra = input("Digite o R.A. do aluno que deseja apagar: ").strip()
+    aluno = buscar_aluno_por_ra(ra)
+
+    if aluno is None:
+        print(f"Nenhum aluno encontrado com o R.A. '{ra}'.")
+        return
+
+    alunos.remove(aluno)
+    print(f"Aluno '{aluno['nome']}' removido com sucesso!")
+
+
 def relatorio_desempenho():
     print("\n--- RELATÓRIO DE DESEMPENHO ---")
     if not alunos:
@@ -122,7 +198,7 @@ def relatorio_desempenho():
 def main():
     while True:
         exibir_menu()
-        opcao = input("Escolha uma opção (1-5): ").strip()
+        opcao = input("Escolha uma opção (1-7): ").strip()
 
         if opcao == '1':
             cadastrar_aluno()
@@ -131,12 +207,16 @@ def main():
         elif opcao == '3':
             buscar_aluno()
         elif opcao == '4':
-            relatorio_desempenho()
+            editar_aluno()
         elif opcao == '5':
+            apagar_aluno()
+        elif opcao == '6':
+            relatorio_desempenho()
+        elif opcao == '7':
             print("\nEncerrando o Sistema de Cadastro de Alunos... Até logo!")
             sys.exit()
         else:
-            print("\nOpção inválida! Por favor, escolha um número de 1 a 5.")
+            print("\nOpção inválida! Por favor, escolha um número de 1 a 7.")
 
 
 if __name__ == "__main__":
